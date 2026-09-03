@@ -316,3 +316,25 @@
     padding: 34px 20px;
   }
 }
+
+@media (max-width: 480px) {
+  .login-page {
+    padding: 12px;
+  }
+
+  .login-shell {
+    border-radius: 22px;
+  }
+
+  .login-panel {
+    padding: 28px 18px;
+  }
+
+  .login-panel-header {
+    margin-bottom: 26px;
+  }
+
+  .login-panel-header h3 {
+    font-size: 2rem;
+  }
+}

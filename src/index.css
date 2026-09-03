@@ -291,6 +291,9 @@ button, input, select, textarea {
 }
 
 .modal-content {
+  width: min(100%, 900px);
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
   background-color: hsl(var(--card));
   border-radius: var(--radius);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
@@ -310,6 +313,7 @@ button, input, select, textarea {
 /* Table styles */
 .data-table {
   width: 100%;
+  min-width: 680px;
   text-align: left;
   border-collapse: separate;
   border-spacing: 0;
@@ -511,5 +515,98 @@ button, input, select, textarea {
     margin-left: 70px;
     width: calc(100% - 70px);
     padding: 1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .layout-wrapper {
+    display: block;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    min-height: 64px;
+    padding: 0.5rem;
+    bottom: 0;
+    top: auto;
+    align-items: stretch;
+    flex-direction: row;
+    box-shadow: 0 -1px 0 hsl(var(--border) / 0.5), 0 -6px 18px rgba(15, 23, 42, 0.08);
+  }
+
+  .sidebar-logo,
+  .sidebar > .mt-auto {
+    display: none !important;
+  }
+
+  .sidebar nav {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    width: 100%;
+    gap: 0.25rem;
+  }
+
+  .sidebar nav button {
+    justify-content: center;
+    min-height: 52px;
+    padding: 0.5rem 0.25rem;
+  }
+
+  .sidebar nav button svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .main-content {
+    width: 100%;
+    margin-left: 0;
+    padding: 1rem;
+    padding-bottom: 5.5rem;
+    gap: 1rem;
+  }
+
+  .main-content-header {
+    margin-bottom: 0.5rem !important;
+  }
+
+  .main-content-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .main-content-header > div:last-child,
+  .main-content-header > div:last-child .btn {
+    width: 100%;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  .modal-overlay {
+    align-items: flex-start;
+    padding: 0.75rem;
+  }
+
+  .modal-content {
+    max-height: calc(100vh - 1.5rem);
+    padding: 1.25rem !important;
+  }
+
+  .violation-filter-tools {
+    padding: 1rem !important;
+  }
+
+  .filter-group {
+    flex-wrap: wrap;
+  }
+
+  .filter-btn,
+  .print-button {
+    flex: 1 1 auto;
+  }
+
+  .data-table {
+    min-width: 620px;
   }
 }
