@@ -645,9 +645,11 @@ button, input, select, textarea {
 
   .sidebar nav .mobile-nav-action {
     display: flex;
+    align-items: center !important;
     min-height: 52px;
     justify-content: center;
     padding: 0.5rem 0.25rem;
+    line-height: 1 !important;
   }
 
   .sidebar > .mt-auto .mobile-nav-action span {
