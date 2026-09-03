@@ -315,6 +315,10 @@ button, input, select, textarea {
   gap: 0.5rem;
 }
 
+.mobile-nav-action {
+  display: none;
+}
+
 .top-nav-button {
   display: inline-flex;
   align-items: center;
@@ -633,12 +637,20 @@ button, input, select, textarea {
     display: none;
   }
 
-  .sidebar > .mt-auto .theme-toggle-btn,
-  .sidebar > .mt-auto > button:last-child {
+  .sidebar > .mt-auto .mobile-nav-action {
+    display: flex;
     width: 44px;
     min-height: 52px;
     justify-content: center;
     padding: 0.5rem 0.25rem;
+  }
+
+  .sidebar > .mt-auto .mobile-nav-action span {
+    display: none;
+  }
+
+  .top-nav-actions {
+    display: none;
   }
 
   .main-content {
