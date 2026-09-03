@@ -720,11 +720,9 @@ export default function App() {
           </button>
           <button onClick={toggleTheme} className="mobile-nav-action" title={isDark ? "Switch to light mode" : "Switch to dark mode"}>
             {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
           </button>
           <button onClick={() => setShowLogoutConfirm(true)} className="mobile-nav-action mobile-nav-logout" title="Logout">
             <LogOut className="w-5 h-5" />
-            <span>Logout</span>
           </button>
         </nav>
 
@@ -752,7 +750,6 @@ export default function App() {
           <div className="top-nav-actions">
             <button onClick={toggleTheme} className="theme-toggle-btn top-nav-button" title={isDark ? "Switch to light mode" : "Switch to dark mode"} aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}>
               {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
             </button>
             <button
               onClick={() => setShowLogoutConfirm(true)}
@@ -761,7 +758,6 @@ export default function App() {
               aria-label="Logout"
             >
               <LogOut className="w-5 h-5" />
-              <span>Logout</span>
             </button>
           </div>
         </div>
