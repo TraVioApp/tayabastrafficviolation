@@ -193,29 +193,38 @@ export function Reports() {
   };
 
   return (
-    <div className="card">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold">Reports</h3>
-        <div className="flex items-center gap-2">
+    <div className="card overflow-hidden">
+      <div className="flex flex-col gap-4 mb-5">
+        <div>
+          <h3 className="text-lg font-bold">Reports</h3>
+          <p className="text-sm text-muted-foreground mt-1">Review collections, violation patterns, and locations.</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
           <div className="btn-group">
-            <button onClick={() => setMode('monthly-financial')} className={`btn ${mode === 'monthly-financial' ? 'btn-primary' : 'btn-ghost'}`}>Monthly Financial</button>
-            <button onClick={() => setMode('top-violations')} className={`btn ${mode === 'top-violations' ? 'btn-primary' : 'btn-ghost'}`}>Top Violations & Hotspots</button>
+            <button onClick={() => setMode('monthly-financial')} className={`btn flex-1 ${mode === 'monthly-financial' ? 'btn-primary' : 'btn-ghost'}`}>Monthly Financial</button>
+            <button onClick={() => setMode('top-violations')} className={`btn flex-1 ${mode === 'top-violations' ? 'btn-primary' : 'btn-ghost'}`}>Top Violations & Hotspots</button>
           </div>
 
-          <select value={year} onChange={e => setYear(Number(e.target.value))} className="input-field">
+          <label className="block">
+            <span className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Year</span>
+            <select value={year} onChange={e => setYear(Number(e.target.value))} className="input-field w-full">
             {years.map(y => (
               <option key={y} value={y}>{y}</option>
             ))}
-          </select>
+            </select>
+          </label>
 
-          <select value={officerId || ''} onChange={e => setOfficerId(e.target.value || null)} className="input-field">
+          <label className="block">
+            <span className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Officer</span>
+            <select value={officerId || ''} onChange={e => setOfficerId(e.target.value || null)} className="input-field w-full">
             <option value="">All Officers</option>
             {officers.map(o => (
               <option key={o.id} value={o.id}>{o.name}</option>
             ))}
-          </select>
+            </select>
+          </label>
 
-          <button onClick={handleRun} className="btn btn-primary">Run Report</button>
+          <button onClick={handleRun} className="btn btn-primary w-full">Run Report</button>
         </div>
       </div>
 
@@ -232,23 +241,41 @@ export function Reports() {
       {mode === 'monthly-financial' && summary && (
         <div>
           <h4 className="font-semibold mt-4">Monthly Financial Summary — {year}</h4>
-          <p className="text-sm">Records: {summary.rowsCount}</p>
-          <div className="grid grid-cols-3 gap-3 mt-2">
+          <p className="text-sm text-muted-foreground mt-1">Records: {summary.rowsCount}</p>
+          <div className="overflow-x-auto mt-3 border border-border rounded-lg">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-3 font-semibold">Month</th>
+                  <th className="px-4 py-3 font-semibold text-right">Pending</th>
+                  <th className="px-4 py-3 font-semibold text-right">Collected</th>
+                  <th className="px-4 py-3 font-semibold text-right">Records</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
             {Object.keys(summary.perMonth).map(k => {
               const m = summary.perMonth[Number(k)];
               return (
-                <div key={k} className="p-3 bg-background rounded">
-                  <div className="text-xs font-medium">Month {k}</div>
-                  <div className="text-sm mt-1">Pending: ₱{m.pending.toLocaleString()}</div>
-                  <div className="text-sm">Collected: ₱{m.collected.toLocaleString()}</div>
-                  <div className="text-sm">Records: {m.count}</div>
-                </div>
+                <tr key={k} className="hover:bg-muted/20">
+                  <td className="px-4 py-3 font-medium">Month {k}</td>
+                  <td className="px-4 py-3 text-right">₱{m.pending.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-right">₱{m.collected.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-right">{m.count}</td>
+                </tr>
               );
             })}
+              </tbody>
+            </table>
           </div>
-          <div className="mt-4">
-            <p className="text-sm">Total Collected: ₱{Number(summary.totalCollected || 0).toLocaleString()}</p>
-            <p className="text-sm">Total Pending: ₱{Number(summary.totalPending || 0).toLocaleString()}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+            <div className="rounded-lg border border-border p-3">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Total Collected</p>
+              <p className="text-lg font-semibold mt-1">₱{Number(summary.totalCollected || 0).toLocaleString()}</p>
+            </div>
+            <div className="rounded-lg border border-border p-3">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Total Pending</p>
+              <p className="text-lg font-semibold mt-1">₱{Number(summary.totalPending || 0).toLocaleString()}</p>
+            </div>
           </div>
         </div>
       )}
@@ -256,31 +283,35 @@ export function Reports() {
       {mode === 'top-violations' && hotspots && (
         <div>
           <h4 className="font-semibold mt-4">Top Violations & Hotspots — {year}</h4>
-          <p className="text-sm">Records scanned: {hotspots.totalRows}</p>
+          <p className="text-sm text-muted-foreground mt-1">Records scanned: {hotspots.totalRows}</p>
 
-          <div className="grid grid-cols-2 gap-4 mt-3">
-            <div>
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mt-3">
+            <div className="overflow-x-auto border border-border rounded-lg">
               <h5 className="font-medium">Top Violation Types</h5>
-              <ol className="list-decimal list-inside mt-2 space-y-1">
-                {hotspots.topTypes.map((t: any) => (
-                  <li key={t[0]}>
-                    <div className="font-semibold">{t[0]}</div>
-                    <div className="text-sm">Count: {t[1].count}, Total: ₱{Number(t[1].total || 0).toLocaleString()}</div>
-                  </li>
-                ))}
-              </ol>
+              <table className="w-full text-sm text-left">
+                <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
+                  <tr><th className="px-4 py-2 font-semibold">Violation</th><th className="px-4 py-2 font-semibold text-right">Count</th><th className="px-4 py-2 font-semibold text-right">Total</th></tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {hotspots.topTypes.map((t: any) => (
+                    <tr key={t[0]} className="hover:bg-muted/20"><td className="px-4 py-3 font-medium">{t[0]}</td><td className="px-4 py-3 text-right">{t[1].count}</td><td className="px-4 py-3 text-right">₱{Number(t[1].total || 0).toLocaleString()}</td></tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
 
-            <div>
-              <h5 className="font-medium">Top Locations</h5>
-              <ol className="list-decimal list-inside mt-2 space-y-1">
-                {hotspots.topLocations.map((l: any) => (
-                  <li key={l[0]}>
-                    <div className="font-semibold">{l[0]}</div>
-                    <div className="text-sm">Count: {l[1].count}, Total: ₱{Number(l[1].total || 0).toLocaleString()}</div>
-                  </li>
-                ))}
-              </ol>
+            <div className="overflow-x-auto border border-border rounded-lg">
+              <h5 className="font-medium px-4 py-3 border-b border-border">Top Locations</h5>
+              <table className="w-full text-sm text-left">
+                <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
+                  <tr><th className="px-4 py-2 font-semibold">Location</th><th className="px-4 py-2 font-semibold text-right">Count</th><th className="px-4 py-2 font-semibold text-right">Total</th></tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {hotspots.topLocations.map((l: any) => (
+                    <tr key={l[0]} className="hover:bg-muted/20"><td className="px-4 py-3 font-medium">{l[0]}</td><td className="px-4 py-3 text-right">{l[1].count}</td><td className="px-4 py-3 text-right">₱{Number(l[1].total || 0).toLocaleString()}</td></tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
