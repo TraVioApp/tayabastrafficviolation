@@ -4,6 +4,12 @@ import { Loader2 } from 'lucide-react';
 
 type ReportMode = 'monthly-financial' | 'top-violations';
 
+interface ViolationDetail {
+  name?: string;
+  fine?: number;
+  severity?: string;
+}
+
 interface ViolationRow {
   id: string;
   violationDate: string;
@@ -12,9 +18,18 @@ interface ViolationRow {
   referenceNumber?: string;
   driverName?: string;
   location?: string;
-  violations?: string;
+  violations?: ViolationDetail[] | string | null;
   officerId?: string;
 }
+
+const formatViolationTypes = (violations: ViolationRow['violations']) => {
+  if (Array.isArray(violations)) {
+    const names = violations.map(violation => violation?.name).filter(Boolean);
+    return names.length ? names.join(', ') : 'Unknown';
+  }
+
+  return typeof violations === 'string' && violations.trim() ? violations.trim() : 'Unknown';
+};
 
 export function Reports() {
   const [mode, setMode] = useState<ReportMode>('monthly-financial');
@@ -147,7 +162,7 @@ export function Reports() {
       const locationCounts: Record<string, { count: number; total: number }> = {};
 
       rows.forEach(r => {
-        const t = (r.violations || 'Unknown').trim();
+        const t = formatViolationTypes(r.violations);
         const loc = (r.location || 'Unknown').trim();
         const amt = Number(r.totalAmount || 0);
 
