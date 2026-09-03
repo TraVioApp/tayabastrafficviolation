@@ -199,7 +199,7 @@ export function Reports() {
           <h3 className="text-lg font-bold">Reports</h3>
           <p className="text-sm text-muted-foreground mt-1">Review collections, violation patterns, and locations.</p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 items-end">
           <div className="btn-group">
             <button onClick={() => setMode('monthly-financial')} className={`btn flex-1 ${mode === 'monthly-financial' ? 'btn-primary' : 'btn-ghost'}`}>Monthly Financial</button>
             <button onClick={() => setMode('top-violations')} className={`btn flex-1 ${mode === 'top-violations' ? 'btn-primary' : 'btn-ghost'}`}>Top Violations & Hotspots</button>
@@ -267,7 +267,7 @@ export function Reports() {
               </tbody>
             </table>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-5">
             <div className="rounded-lg border border-border p-3">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Total Collected</p>
               <p className="text-lg font-semibold mt-1">₱{Number(summary.totalCollected || 0).toLocaleString()}</p>
@@ -285,7 +285,7 @@ export function Reports() {
           <h4 className="font-semibold mt-4">Top Violations & Hotspots — {year}</h4>
           <p className="text-sm text-muted-foreground mt-1">Records scanned: {hotspots.totalRows}</p>
 
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mt-6">
             <div className="overflow-x-auto border border-border rounded-lg">
               <h5 className="font-medium px-5 py-4 border-b border-border">Top Violation Types</h5>
               <table className="w-full min-w-[520px] text-sm text-left">
