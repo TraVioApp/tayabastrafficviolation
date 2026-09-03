@@ -626,13 +626,17 @@ button, input, select, textarea {
 
   .sidebar nav button {
     justify-content: center;
+    align-items: center;
     min-height: 52px;
     padding: 0.5rem 0.25rem;
+    line-height: 1;
   }
 
   .sidebar nav button svg {
     width: 1.25rem;
     height: 1.25rem;
+    display: block;
+    flex: 0 0 auto;
   }
 
   .sidebar > .mt-auto {
