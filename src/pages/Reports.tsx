@@ -246,10 +246,10 @@ export function Reports() {
             <table className="w-full text-sm text-left">
               <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
                 <tr className="border-b border-border">
-                  <th className="px-4 py-3 font-semibold">Month</th>
-                  <th className="px-4 py-3 font-semibold text-right">Pending</th>
-                  <th className="px-4 py-3 font-semibold text-right">Collected</th>
-                  <th className="px-4 py-3 font-semibold text-right">Records</th>
+                  <th className="px-5 py-4 font-semibold">Month</th>
+                  <th className="px-5 py-4 font-semibold text-right">Pending</th>
+                  <th className="px-5 py-4 font-semibold text-right">Collected</th>
+                  <th className="px-5 py-4 font-semibold text-right">Records</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -257,10 +257,10 @@ export function Reports() {
               const m = summary.perMonth[Number(k)];
               return (
                 <tr key={k} className="hover:bg-muted/20">
-                  <td className="px-4 py-3 font-medium">Month {k}</td>
-                  <td className="px-4 py-3 text-right">₱{m.pending.toLocaleString()}</td>
-                  <td className="px-4 py-3 text-right">₱{m.collected.toLocaleString()}</td>
-                  <td className="px-4 py-3 text-right">{m.count}</td>
+                  <td className="px-5 py-4 font-medium">Month {k}</td>
+                  <td className="px-5 py-4 text-right">₱{m.pending.toLocaleString()}</td>
+                  <td className="px-5 py-4 text-right">₱{m.collected.toLocaleString()}</td>
+                  <td className="px-5 py-4 text-right">{m.count}</td>
                 </tr>
               );
             })}
@@ -285,30 +285,30 @@ export function Reports() {
           <h4 className="font-semibold mt-4">Top Violations & Hotspots — {year}</h4>
           <p className="text-sm text-muted-foreground mt-1">Records scanned: {hotspots.totalRows}</p>
 
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 mt-5">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
             <div className="overflow-x-auto border border-border rounded-lg">
-              <h5 className="font-medium px-4 py-3 border-b border-border">Top Violation Types</h5>
-              <table className="w-full text-sm text-left">
+              <h5 className="font-medium px-5 py-4 border-b border-border">Top Violation Types</h5>
+              <table className="w-full min-w-[520px] text-sm text-left">
                 <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
-                  <tr><th className="px-4 py-2 font-semibold">Violation</th><th className="px-4 py-2 font-semibold text-right">Count</th><th className="px-4 py-2 font-semibold text-right">Total</th></tr>
+                  <tr><th className="px-5 py-3 font-semibold">Violation</th><th className="px-5 py-3 font-semibold text-right">Count</th><th className="px-5 py-3 font-semibold text-right">Total</th></tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {hotspots.topTypes.map((t: any) => (
-                    <tr key={t[0]} className="hover:bg-muted/20"><td className="px-4 py-3 font-medium">{t[0]}</td><td className="px-4 py-3 text-right">{t[1].count}</td><td className="px-4 py-3 text-right">₱{Number(t[1].total || 0).toLocaleString()}</td></tr>
+                    <tr key={t[0]} className="hover:bg-muted/20"><td className="px-5 py-4 font-medium">{t[0]}</td><td className="px-5 py-4 text-right">{t[1].count}</td><td className="px-5 py-4 text-right">₱{Number(t[1].total || 0).toLocaleString()}</td></tr>
                   ))}
                 </tbody>
               </table>
             </div>
 
             <div className="overflow-x-auto border border-border rounded-lg">
-              <h5 className="font-medium px-4 py-3 border-b border-border">Top Locations</h5>
-              <table className="w-full text-sm text-left">
+              <h5 className="font-medium px-5 py-4 border-b border-border">Top Locations</h5>
+              <table className="w-full min-w-[520px] text-sm text-left">
                 <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
-                  <tr><th className="px-4 py-2 font-semibold">Location</th><th className="px-4 py-2 font-semibold text-right">Count</th><th className="px-4 py-2 font-semibold text-right">Total</th></tr>
+                  <tr><th className="px-5 py-3 font-semibold">Location</th><th className="px-5 py-3 font-semibold text-right">Count</th><th className="px-5 py-3 font-semibold text-right">Total</th></tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {hotspots.topLocations.map((l: any) => (
-                    <tr key={l[0]} className="hover:bg-muted/20"><td className="px-4 py-3 font-medium">{l[0]}</td><td className="px-4 py-3 text-right">{l[1].count}</td><td className="px-4 py-3 text-right">₱{Number(l[1].total || 0).toLocaleString()}</td></tr>
+                    <tr key={l[0]} className="hover:bg-muted/20"><td className="px-5 py-4 font-medium">{l[0]}</td><td className="px-5 py-4 text-right">{l[1].count}</td><td className="px-5 py-4 text-right">₱{Number(l[1].total || 0).toLocaleString()}</td></tr>
                   ))}
                 </tbody>
               </table>
