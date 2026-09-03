@@ -832,7 +832,7 @@ export default function App() {
         )}
 
         {activeTab === "reports" && (
-          <div className="screen-only card">
+          <div className="screen-only">
             <Reports />
           </div>
         )}

@@ -200,9 +200,12 @@ export function Reports() {
           <p className="text-sm text-muted-foreground mt-1">Review collections, violation patterns, and locations.</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 items-end">
-          <div className="btn-group">
+          <div className="sm:col-span-2 lg:col-span-2">
+            <span className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Report type</span>
+            <div className="btn-group w-full">
             <button onClick={() => setMode('monthly-financial')} className={`btn flex-1 ${mode === 'monthly-financial' ? 'btn-primary' : 'btn-ghost'}`}>Monthly Financial</button>
             <button onClick={() => setMode('top-violations')} className={`btn flex-1 ${mode === 'top-violations' ? 'btn-primary' : 'btn-ghost'}`}>Top Violations & Hotspots</button>
+            </div>
           </div>
 
           <label className="block">

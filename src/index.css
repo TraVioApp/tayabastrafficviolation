@@ -601,6 +601,16 @@ button, input, select, textarea {
     flex-wrap: wrap;
   }
 
+  .btn-group {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .btn-group .btn {
+    width: 100%;
+    min-height: 42px;
+  }
+
   .filter-btn,
   .print-button {
     flex: 1 1 auto;
