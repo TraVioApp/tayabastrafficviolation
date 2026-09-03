@@ -722,29 +722,35 @@ export default function App() {
               </div>
             </div>
           </div>
-          {/* Theme toggle */}
-          <button onClick={toggleTheme} className="theme-toggle-btn">
-            {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            <span className="nav-text">{isDark ? "Light Mode" : "Dark Mode"}</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setIsLoggedIn(false);
-              localStorage.removeItem("tms_isLoggedIn");
-              try { localStorage.removeItem("tms_admin_name"); } catch {}
-              setAdminDisplayName("");
-            }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors"
-          >
-            <LogOut className="w-5 h-5" />
-            <span className="nav-text">Secure Logout</span>
-          </button>
         </div>
       </aside>
 
       {/* Main Content Area */}
       <main className="main-content">
+        <div className="top-nav">
+          <div className="top-nav-brand">
+            <span className="top-nav-eyebrow">Traffic Management System</span>
+            <strong>Admin Portal</strong>
+          </div>
+          <div className="top-nav-actions">
+            <button onClick={toggleTheme} className="theme-toggle-btn top-nav-button" title={isDark ? "Switch to light mode" : "Switch to dark mode"}>
+              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
+            </button>
+            <button
+              onClick={() => {
+                setIsLoggedIn(false);
+                localStorage.removeItem("tms_isLoggedIn");
+                try { localStorage.removeItem("tms_admin_name"); } catch {}
+                setAdminDisplayName("");
+              }}
+              className="top-nav-button top-nav-logout"
+            >
+              <LogOut className="w-5 h-5" />
+              <span>Logout</span>
+            </button>
+          </div>
+        </div>
         {/* Header */}
         <div className="main-content-header flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div>
