@@ -199,7 +199,7 @@ export function Reports() {
           <h3 className="text-lg font-bold">Reports</h3>
           <p className="text-sm text-muted-foreground mt-1">Review collections, violation patterns, and locations.</p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 items-end">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 items-end">
           <div className="sm:col-span-2 lg:col-span-2">
             <span className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Report type</span>
             <div className="btn-group w-full">
