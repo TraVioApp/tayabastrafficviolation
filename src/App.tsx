@@ -114,6 +114,7 @@ export default function App() {
   const [officersLoading, setOfficersLoading] = useState(false);
   const [officerSearchQuery, setOfficerSearchQuery] = useState("");
   const [showAddOfficerModal, setShowAddOfficerModal] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [savingOfficer, setSavingOfficer] = useState(false);
   const [editingOfficer, setEditingOfficer] = useState<Enforcer | null>(null);
   
@@ -135,6 +136,14 @@ export default function App() {
     const newIsDark = root.classList.contains("dark");
     setIsDark(newIsDark);
     localStorage.setItem("theme", newIsDark ? "dark" : "light");
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    localStorage.removeItem("tms_isLoggedIn");
+    try { localStorage.removeItem("tms_admin_name"); } catch {}
+    setAdminDisplayName("");
+    setShowLogoutConfirm(false);
   };
 
   // Ensure the document root has the correct class on first render and keep localStorage in sync
@@ -738,12 +747,7 @@ export default function App() {
               <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
             </button>
             <button
-              onClick={() => {
-                setIsLoggedIn(false);
-                localStorage.removeItem("tms_isLoggedIn");
-                try { localStorage.removeItem("tms_admin_name"); } catch {}
-                setAdminDisplayName("");
-              }}
+              onClick={() => setShowLogoutConfirm(true)}
               className="top-nav-button top-nav-logout"
             >
               <LogOut className="w-5 h-5" />
@@ -1085,6 +1089,21 @@ export default function App() {
           </div>
         )}
       </main>
+
+      {showLogoutConfirm && (
+        <div className="modal-overlay" onClick={() => setShowLogoutConfirm(false)}>
+          <div className="modal-content w-full max-w-md space-y-5" onClick={e => e.stopPropagation()}>
+            <div>
+              <h3 className="text-xl font-bold text-foreground">Confirm Logout</h3>
+              <p className="text-sm text-muted-foreground mt-2">Are you sure you want to sign out of the admin portal?</p>
+            </div>
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+              <button type="button" onClick={() => setShowLogoutConfirm(false)} className="btn btn-secondary">Cancel</button>
+              <button type="button" onClick={handleLogout} className="btn btn-danger">Logout</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* VIOLATION DETAILS MODAL */}
       {selectedViolation && (
