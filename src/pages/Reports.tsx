@@ -12,7 +12,7 @@ interface ViolationRow {
   referenceNumber?: string;
   driverName?: string;
   location?: string;
-  violationType?: string;
+  violations?: string;
   officerId?: string;
 }
 
@@ -59,7 +59,7 @@ export function Reports() {
     while (true) {
       let q: any = supabase
         .from('violations')
-        .select('id,violationDate,totalAmount,status,referenceNumber,driverName,location,violationType,officerId')
+        .select('id,violationDate,totalAmount,status,referenceNumber,driverName,location,violations,officerId')
         .gte('violationDate', from)
         .lte('violationDate', to)
         .range(offset, offset + pageSize - 1);
@@ -147,7 +147,7 @@ export function Reports() {
       const locationCounts: Record<string, { count: number; total: number }> = {};
 
       rows.forEach(r => {
-        const t = (r.violationType || 'Unknown').trim();
+        const t = (r.violations || 'Unknown').trim();
         const loc = (r.location || 'Unknown').trim();
         const amt = Number(r.totalAmount || 0);
 
