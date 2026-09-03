@@ -750,13 +750,15 @@ export default function App() {
             <strong>Admin Portal</strong>
           </div>
           <div className="top-nav-actions">
-            <button onClick={toggleTheme} className="theme-toggle-btn top-nav-button" title={isDark ? "Switch to light mode" : "Switch to dark mode"}>
+            <button onClick={toggleTheme} className="theme-toggle-btn top-nav-button" title={isDark ? "Switch to light mode" : "Switch to dark mode"} aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}>
               {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
             </button>
             <button
               onClick={() => setShowLogoutConfirm(true)}
               className="top-nav-button top-nav-logout"
+              title="Logout"
+              aria-label="Logout"
             >
               <LogOut className="w-5 h-5" />
               <span>Logout</span>

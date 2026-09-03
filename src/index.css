@@ -341,6 +341,15 @@ button, input, select, textarea {
   border-color: hsl(var(--accent));
 }
 
+.top-nav-button span {
+  display: none;
+}
+
+.top-nav-button {
+  width: 42px;
+  padding: 0.5rem;
+}
+
 .top-nav-logout {
   color: hsl(var(--destructive));
 }
