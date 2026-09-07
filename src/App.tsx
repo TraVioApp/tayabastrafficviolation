@@ -77,6 +77,7 @@ interface Enforcer {
 interface PaymentRecord {
   id: string;
   violation_id: string;
+  violator_name: string;
   or_number: string;
   amount_paid: number | string;
   payment_date: string;
@@ -320,7 +321,7 @@ export default function App() {
     try {
       const { data, error } = await supabase
         .from("payments")
-        .select("id,violation_id,or_number,amount_paid,payment_date,payment_method,received_by,remarks,created_at")
+        .select("id,violation_id,violator_name,or_number,amount_paid,payment_date,payment_method,received_by,remarks,created_at")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -405,6 +406,7 @@ export default function App() {
         .from("payments")
         .insert({
           violation_id: paymentViolation.id,
+          violator_name: paymentViolation.driverName,
           or_number: paymentForm.orNumber.trim(),
           amount_paid: Number(paymentViolation.totalAmount || 0),
           payment_date: paymentForm.paymentDate,
@@ -965,6 +967,7 @@ export default function App() {
               <table className="data-table min-w-[900px]">
                 <thead>
                   <tr>
+                    <th>Violator Name</th>
                     <th>OR Number</th>
                     <th>Reference Number</th>
                     <th>Amount Paid</th>
@@ -976,14 +979,15 @@ export default function App() {
                 </thead>
                 <tbody>
                   {paymentsLoading ? (
-                    <tr><td colSpan={7} className="p-8 text-center text-muted-foreground"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></td></tr>
+                    <tr><td colSpan={8} className="p-8 text-center text-muted-foreground"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></td></tr>
                   ) : payments.length === 0 ? (
-                    <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">No payment transactions recorded</td></tr>
+                    <tr><td colSpan={8} className="p-8 text-center text-muted-foreground">No payment transactions recorded</td></tr>
                   ) : (
                     payments.map(payment => {
                       const violation = violations.find(record => record.id === payment.violation_id);
                       return (
                         <tr key={payment.id}>
+                          <td className="font-medium">{payment.violator_name}</td>
                           <td className="font-mono text-xs text-blue-400">{payment.or_number}</td>
                           <td className="font-mono text-xs">{violation?.referenceNumber || payment.violation_id}</td>
                           <td className="font-semibold">₱{Number(payment.amount_paid || 0).toLocaleString()}</td>
