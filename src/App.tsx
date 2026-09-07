@@ -71,6 +71,7 @@ interface Enforcer {
   password?: string;
   status?: "active" | "inactive";
   isSystemAdmin?: boolean;
+  role?: "admin" | "treasurer" | "officer";
 }
 
 export default function App() {
@@ -85,6 +86,13 @@ export default function App() {
       return "";
     }
 
+  });
+  const [currentUserRole, setCurrentUserRole] = useState<"admin" | "treasurer" | "officer">(() => {
+    try {
+      return (localStorage.getItem("tms_user_role") as "admin" | "treasurer" | "officer") || "admin";
+    } catch {
+      return "admin";
+    }
   });
   const [activeTab, setActiveTab] = useState<"dashboard" | "violations" | "officers" | "reports">("dashboard");
   
@@ -135,6 +143,7 @@ export default function App() {
     badgeNumber: "",
     station: "",
     rank: "Traffic Enforcer I",
+    role: "officer" as "admin" | "treasurer" | "officer",
     dateJoined: new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
   });
 
@@ -152,6 +161,8 @@ export default function App() {
     localStorage.removeItem("tms_isLoggedIn");
     try { localStorage.removeItem("tms_admin_name"); } catch {}
     setAdminDisplayName("");
+    setCurrentUserRole("admin");
+    try { localStorage.removeItem("tms_user_role"); } catch {}
     setShowLogoutConfirm(false);
   };
 
@@ -173,7 +184,7 @@ export default function App() {
       // Try to read is_system_admin (new schema)
       const { data, error } = await supabase
         .from("enforcers")
-        .select("id, is_system_admin, status, name")
+        .select("id, is_system_admin, role, status, name")
         .eq("username", username)
         .eq("password", password)
         .single();
@@ -184,7 +195,7 @@ export default function App() {
           console.warn("is_system_admin column missing; using legacy admin detection");
           const { data: legacyData, error: legacyError } = await supabase
             .from("enforcers")
-            .select("id, name, status")
+            .select("id, name, role, status")
             .eq("username", username)
             .eq("password", password)
             .single();
@@ -192,7 +203,7 @@ export default function App() {
           if (legacyError) throw legacyError;
           // Legacy heuristic: username 'admin' or name contains 'Portal Administrator'
           const isAdminLegacy = (legacyData?.name && legacyData.name.toLowerCase().includes("portal administrator"));
-          return { ...legacyData, is_system_admin: isAdminLegacy };
+          return { ...legacyData, is_system_admin: isAdminLegacy, role: isAdminLegacy ? "admin" : (legacyData?.role || "officer") };
         }
         throw error;
       }
@@ -216,8 +227,8 @@ export default function App() {
         return;
       }
 
-      // If user is a system admin, grant full admin access
-      if (enforcer.is_system_admin) {
+      const role = enforcer.role || (enforcer.is_system_admin ? "admin" : "officer");
+      if (role === "admin" || role === "treasurer") {
         if (enforcer.status === "inactive") {
           toast.error("Account is deactivated. Access denied.");
           return;
@@ -226,7 +237,9 @@ export default function App() {
         setIsLoggedIn(true);
         const displayName = (enforcer && (enforcer.name || enforcer.id || username)) || "System Admin";
         setAdminDisplayName(displayName);
+        setCurrentUserRole(role);
         try { localStorage.setItem("tms_admin_name", displayName); } catch {}
+        try { localStorage.setItem("tms_user_role", role); } catch {}
         localStorage.setItem("tms_isLoggedIn", "true");
         toast.success("Welcome back, Portal Administrator");
       } else {
@@ -277,6 +290,7 @@ export default function App() {
         badgeNumber: off.badge_number,
         dateJoined: off.date_joined,
         isSystemAdmin: off.is_system_admin,
+        role: off.role || (off.is_system_admin ? "admin" : "officer"),
       }));
       setEnforcers(normalized);
     } catch (e: any) {
@@ -572,6 +586,7 @@ export default function App() {
         badgeNumber: "",
         station: "",
         rank: "Traffic Enforcer I",
+        role: "officer",
         dateJoined: new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
       });
       fetchEnforcers();
@@ -682,6 +697,8 @@ export default function App() {
     e.badgeNumber?.toLowerCase().includes(officerSearchQuery.toLowerCase()) ||
     e.station?.toLowerCase().includes(officerSearchQuery.toLowerCase())
   );
+
+  const canMarkPayments = currentUserRole === "treasurer";
 
   if (!isLoggedIn) {
     return (
@@ -998,7 +1015,7 @@ export default function App() {
                                 </>
                               )}
                             </button>
-                            {record.status === "pending" && (
+                            {canMarkPayments && record.status === "pending" && (
                               <button
                                 onClick={() => openPaymentModal(record)}
                                 disabled={updatingPaymentId === record.id}
@@ -1092,6 +1109,7 @@ export default function App() {
                                   badgeNumber: officer.badgeNumber,
                                   station: officer.station,
                                   rank: officer.rank,
+                                  role: officer.role || "officer",
                                   dateJoined: officer.dateJoined,
                                 });
                                 setShowAddOfficerModal(true);
@@ -1361,7 +1379,7 @@ export default function App() {
                 >
                   Close
                 </button>
-                {selectedViolation.status === "pending" && (
+                {canMarkPayments && selectedViolation.status === "pending" && (
                   <button
                     onClick={() => openPaymentModal(selectedViolation)}
                     disabled={updatingPaymentId === selectedViolation.id}
@@ -1393,6 +1411,7 @@ export default function App() {
             badgeNumber: "",
             station: "",
             rank: "Traffic Enforcer I",
+            role: "officer",
             dateJoined: new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
           });
         }}>
@@ -1412,6 +1431,7 @@ export default function App() {
                     badgeNumber: "",
                     station: "",
                     rank: "Traffic Enforcer I",
+                    role: "officer",
                     dateJoined: new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
                   });
                 }}
@@ -1472,6 +1492,19 @@ export default function App() {
                 </select>
               </div>
 
+              <div className="space-y-1.5">
+                <label className="text-xs text-muted-foreground font-semibold uppercase">User Role</label>
+                <select
+                  className="input-field"
+                  value={newOfficer.role}
+                  onChange={e => setNewOfficer(prev => ({ ...prev, role: e.target.value as "admin" | "treasurer" | "officer" }))}
+                >
+                  <option value="officer">Officer</option>
+                  <option value="treasurer">Treasurer</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+
               <div className="grid grid-cols-2 gap-4 pt-2">
                 <div className="space-y-1.5">
                   <label className="text-xs text-muted-foreground font-semibold uppercase">Username</label>
@@ -1510,6 +1543,7 @@ export default function App() {
                       badgeNumber: "",
                       station: "",
                       rank: "Traffic Enforcer I",
+                      role: "officer",
                       dateJoined: new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
                     });
                   }}
