@@ -138,12 +138,10 @@ export function Dashboard({ violations, enforcers, loading }: Props) {
     const todayCount = violations.filter(
       (v) => v.violationDate?.slice(0, 10) === today || v.createdAt?.slice(0, 10) === today
     ).length;
-    const collected = paid.reduce((s, v) => s + Number(v.totalAmount || 0), 0);
-    const pendingAmt = pending.reduce((s, v) => s + Number(v.totalAmount || 0), 0);
     const collectionRate = violations.length > 0 ? (paid.length / violations.length) * 100 : 0;
     const activeOfficers = enforcers.filter((e) => e.status !== "inactive" && !e.isSystemAdmin).length;
 
-    return { paid, pending, cancelled, todayCount, collected, pendingAmt, collectionRate, activeOfficers };
+    return { paid, pending, cancelled, todayCount, collectionRate, activeOfficers };
   }, [violations, enforcers, today]);
 
   /* ── Severity breakdown ── */
@@ -253,16 +251,16 @@ export function Dashboard({ violations, enforcers, loading }: Props) {
           color="#3b82f6"
         />
         <KpiCard
-          label="Revenue Collected"
-          value={`₱${(kpi.collected / 1000).toFixed(1)}k`}
-          sub={`${kpi.paid.length} paid records`}
+          label="Total Paid"
+          value={kpi.paid.length.toLocaleString()}
+          sub="Paid records"
           icon={() => <span className="text-xl font-bold">₱</span>}
           color="#10b981"
         />
         <KpiCard
-          label="Pending Revenue"
-          value={`₱${(kpi.pendingAmt / 1000).toFixed(1)}k`}
-          sub={`${kpi.pending.length} pending`}
+          label="Total Not Paid"
+          value={kpi.pending.length.toLocaleString()}
+          sub="Pending records"
           icon={AlertCircle}
           color="#f59e0b"
         />
