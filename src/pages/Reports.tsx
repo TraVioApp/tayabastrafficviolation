@@ -245,7 +245,7 @@ export function Reports() {
         <div>
           <h4 className="font-semibold mt-4">Monthly Financial Summary — {year}</h4>
           <p className="text-sm text-muted-foreground mt-1">Records: {summary.rowsCount}</p>
-          <div className="overflow-x-auto mt-5 border border-border rounded-lg">
+          <div className="overflow-x-auto mt-5">
             <table className="w-full text-sm text-left">
               <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
                 <tr className="border-b border-border">
@@ -289,7 +289,7 @@ export function Reports() {
           <p className="text-sm text-muted-foreground mt-1">Records scanned: {hotspots.totalRows}</p>
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mt-6">
-            <div className="overflow-x-auto border border-border rounded-lg">
+            <div className="overflow-x-auto">
               <h5 className="font-medium px-5 py-4 border-b border-border">Top Violation Types</h5>
               <table className="w-full min-w-[520px] text-sm text-left">
                 <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
@@ -303,7 +303,7 @@ export function Reports() {
               </table>
             </div>
 
-            <div className="overflow-x-auto border border-border rounded-lg">
+            <div className="overflow-x-auto">
               <h5 className="font-medium px-5 py-4 border-b border-border">Top Locations</h5>
               <table className="w-full min-w-[520px] text-sm text-left">
                 <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
