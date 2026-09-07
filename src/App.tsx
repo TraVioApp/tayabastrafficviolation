@@ -670,13 +670,8 @@ export default function App() {
   };
 
   // Calculated stats
-  const totalCollected = violations
-    .filter(v => v.status === "paid")
-    .reduce((sum, v) => sum + Number(v.totalAmount || 0), 0);
-
-  const totalPending = violations
-    .filter(v => v.status === "pending")
-    .reduce((sum, v) => sum + Number(v.totalAmount || 0), 0);
+  const totalPaid = violations.filter(v => v.status === "paid").length;
+  const totalNotPaid = violations.filter(v => v.status === "pending").length;
 
   // Filtered lists
   const filteredViolations = violations.filter(v => {
@@ -872,9 +867,9 @@ export default function App() {
 
             <div className="stat-card">
               <div>
-                <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">Pending Penalties</p>
+                <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">Total Not Paid</p>
                 <h3 className="text-3xl font-bold mt-1 text-amber-500">
-                  ₱{totalPending.toLocaleString()}
+                  {totalNotPaid.toLocaleString()}
                 </h3>
               </div>
               <div className="icon-container bg-amber-500/10 text-amber-500">
@@ -884,9 +879,9 @@ export default function App() {
 
             <div className="stat-card">
               <div>
-                <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">Collected Revenue</p>
+                <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">Total Paid</p>
                 <h3 className="text-3xl font-bold mt-1 text-emerald-500">
-                  ₱{totalCollected.toLocaleString()}
+                  {totalPaid.toLocaleString()}
                 </h3>
               </div>
               <div className="icon-container bg-emerald-500/10 text-emerald-500">
