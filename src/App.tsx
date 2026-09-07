@@ -959,10 +959,6 @@ export default function App() {
         {activeTab === "payments" && currentUserRole === "treasurer" && (
           <div className="screen-only card overflow-hidden">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
-              <div>
-                <h3 className="text-lg font-bold">Payment Transactions</h3>
-                <p className="text-sm text-muted-foreground mt-1">Official receipt and payment records.</p>
-              </div>
               <button type="button" onClick={fetchPayments} className="btn btn-secondary">Refresh Logs</button>
             </div>
             <div className="overflow-x-auto border border-border rounded-lg">
