@@ -74,6 +74,18 @@ interface Enforcer {
   role?: "admin" | "treasurer" | "officer";
 }
 
+interface PaymentRecord {
+  id: string;
+  violation_id: string;
+  or_number: string;
+  amount_paid: number | string;
+  payment_date: string;
+  payment_method: string;
+  received_by?: string | null;
+  remarks?: string | null;
+  created_at: string;
+}
+
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem("tms_isLoggedIn") === "true");
   // const [isOfficer, setIsOfficer] = useState(false); // removed unused state
@@ -94,7 +106,7 @@ export default function App() {
       return "admin";
     }
   });
-  const [activeTab, setActiveTab] = useState<"dashboard" | "violations" | "officers" | "reports">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "violations" | "officers" | "reports" | "payments">("dashboard");
   
   // Default to dark mode unless user explicitly set a preference
   const [isDark, setIsDark] = useState(() => {
@@ -111,6 +123,8 @@ export default function App() {
   
   // Violations States
   const [violations, setViolations] = useState<ViolationRecord[]>([]);
+  const [payments, setPayments] = useState<PaymentRecord[]>([]);
+  const [paymentsLoading, setPaymentsLoading] = useState(false);
   const [violationsLoading, setViolationsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "paid">("all");
@@ -301,6 +315,24 @@ export default function App() {
     }
   };
 
+  const fetchPayments = async () => {
+    setPaymentsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("payments")
+        .select("id,violation_id,or_number,amount_paid,payment_date,payment_method,received_by,remarks,created_at")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setPayments((data || []) as PaymentRecord[]);
+    } catch (e: any) {
+      console.error(e);
+      toast.error("Failed to load payment transactions: " + e.message);
+    } finally {
+      setPaymentsLoading(false);
+    }
+  };
+
   
 
   useEffect(() => {
@@ -308,6 +340,7 @@ export default function App() {
     if (isLoggedIn) {
       fetchViolations();
       fetchEnforcers();
+      if (currentUserRole === "treasurer") fetchPayments();
 
       // Subscribe to realtime changes on enforcers table
       subscription = supabase
@@ -398,6 +431,7 @@ export default function App() {
       if (selectedViolation?.id === paymentViolation.id) {
         setSelectedViolation(prev => prev ? { ...prev, status: "paid" } : null);
       }
+      if (currentUserRole === "treasurer") fetchPayments();
       setPaymentViolation(null);
     } catch (e: any) {
       toast.error("Failed to save payment: " + e.message);
@@ -772,6 +806,19 @@ export default function App() {
             <FileSpreadsheet className="w-5 h-5" />
             <span className="nav-text">Reports</span>
           </button>
+          {currentUserRole === "treasurer" && (
+            <button
+              onClick={() => setActiveTab("payments")}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                activeTab === "payments"
+                  ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              }`}
+            >
+              <DollarSign className="w-5 h-5" />
+              <span className="nav-text">Payment Logs</span>
+            </button>
+          )}
           <button onClick={toggleTheme} className="mobile-nav-action" title={isDark ? "Switch to light mode" : "Switch to dark mode"}>
             {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </button>
@@ -819,7 +866,7 @@ export default function App() {
         <div className="main-content-header flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-foreground">
-              {activeTab === "dashboard" ? "Dashboard" : activeTab === "violations" ? "Violation Records" : activeTab === "officers" ? "Officers Directory" : "Reports"}
+              {activeTab === "dashboard" ? "Dashboard" : activeTab === "violations" ? "Violation Records" : activeTab === "officers" ? "Officers Directory" : activeTab === "payments" ? "Payment Transactions" : "Reports"}
             </h2>
             <p className="text-muted-foreground text-sm mt-1">
               {activeTab === "dashboard"
@@ -828,6 +875,8 @@ export default function App() {
                 ? "Track, search, and verify payment states of enforcer reports." 
                 : activeTab === "officers" 
                   ? "Manage and authorize enforcer personnel active directory." 
+                  : activeTab === "payments"
+                  ? "Review recorded payment transactions and official receipts."
                   : "Generate financial and violation reports by year, officer, and month."}
             </p>
           </div>
@@ -904,6 +953,55 @@ export default function App() {
         {activeTab === "reports" && (
           <div className="screen-only">
             <Reports />
+          </div>
+        )}
+
+        {activeTab === "payments" && currentUserRole === "treasurer" && (
+          <div className="screen-only card overflow-hidden">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+              <div>
+                <h3 className="text-lg font-bold">Payment Transactions</h3>
+                <p className="text-sm text-muted-foreground mt-1">Official receipt and payment records.</p>
+              </div>
+              <button type="button" onClick={fetchPayments} className="btn btn-secondary">Refresh Logs</button>
+            </div>
+            <div className="overflow-x-auto border border-border rounded-lg">
+              <table className="data-table min-w-[900px]">
+                <thead>
+                  <tr>
+                    <th>OR Number</th>
+                    <th>Reference Number</th>
+                    <th>Amount Paid</th>
+                    <th>Payment Date</th>
+                    <th>Method</th>
+                    <th>Received By</th>
+                    <th>Remarks</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paymentsLoading ? (
+                    <tr><td colSpan={7} className="p-8 text-center text-muted-foreground"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></td></tr>
+                  ) : payments.length === 0 ? (
+                    <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">No payment transactions recorded</td></tr>
+                  ) : (
+                    payments.map(payment => {
+                      const violation = violations.find(record => record.id === payment.violation_id);
+                      return (
+                        <tr key={payment.id}>
+                          <td className="font-mono text-xs text-blue-400">{payment.or_number}</td>
+                          <td className="font-mono text-xs">{violation?.referenceNumber || payment.violation_id}</td>
+                          <td className="font-semibold">₱{Number(payment.amount_paid || 0).toLocaleString()}</td>
+                          <td>{payment.payment_date}</td>
+                          <td>{payment.payment_method}</td>
+                          <td>{payment.received_by || "N/A"}</td>
+                          <td className="text-muted-foreground">{payment.remarks || "-"}</td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
