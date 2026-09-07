@@ -197,7 +197,6 @@ export function Reports() {
       <div className="flex flex-col gap-5 mb-7">
         <div>
           <h3 className="text-lg font-bold">Reports</h3>
-          <p className="text-sm text-muted-foreground mt-1">Review collections, violation patterns, and locations.</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 items-end">
           <div className="sm:col-span-2 lg:col-span-2">
