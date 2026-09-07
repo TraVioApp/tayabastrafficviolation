@@ -84,6 +84,7 @@ export default function App() {
     } catch (e) {
       return "";
     }
+
   });
   const [activeTab, setActiveTab] = useState<"dashboard" | "violations" | "officers" | "reports">("dashboard");
   
@@ -106,6 +107,14 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "paid">("all");
   const [selectedViolation, setSelectedViolation] = useState<ViolationRecord | null>(null);
+  const [paymentViolation, setPaymentViolation] = useState<ViolationRecord | null>(null);
+  const [paymentForm, setPaymentForm] = useState({
+    orNumber: "",
+    paymentDate: new Date().toISOString().slice(0, 10),
+    paymentMethod: "Cash",
+    receivedBy: "",
+    remarks: "",
+  });
   const [loadingDetails, setLoadingDetails] = useState<string | null>(null);
   const [updatingPaymentId, setUpdatingPaymentId] = useState<string | null>(null);
   
@@ -323,14 +332,46 @@ export default function App() {
     }
   };
 
-  // Mark pending as paid
-  const handleMarkAsPaid = async (recordId: string) => {
-    setUpdatingPaymentId(recordId);
+  const openPaymentModal = (record: ViolationRecord) => {
+    setPaymentViolation(record);
+    setPaymentForm({
+      orNumber: "",
+      paymentDate: new Date().toISOString().slice(0, 10),
+      paymentMethod: "Cash",
+      receivedBy: adminDisplayName || "Portal Administrator",
+      remarks: "",
+    });
+  };
+
+  // Save payment details, then mark the related violation as paid.
+  const handleMarkAsPaid = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!paymentViolation) return;
+    if (!paymentForm.orNumber.trim()) {
+      toast.error("OR Number is required");
+      return;
+    }
+
+    setUpdatingPaymentId(paymentViolation.id);
     try {
+      const { error: paymentError } = await supabase
+        .from("payments")
+        .insert({
+          violation_id: paymentViolation.id,
+          or_number: paymentForm.orNumber.trim(),
+          amount_paid: Number(paymentViolation.totalAmount || 0),
+          payment_date: paymentForm.paymentDate,
+          payment_method: paymentForm.paymentMethod,
+          received_by: paymentForm.receivedBy.trim() || null,
+          remarks: paymentForm.remarks.trim() || null,
+        });
+
+      if (paymentError) throw paymentError;
+
       const { error } = await supabase
         .from("violations")
         .update({ status: "paid" })
-        .eq("id", recordId);
+        .eq("id", paymentViolation.id);
 
       if (error) throw error;
       
@@ -338,13 +379,14 @@ export default function App() {
       
       // Update state locally
       setViolations(prev =>
-        prev.map(v => (v.id === recordId ? { ...v, status: "paid" } : v))
+        prev.map(v => (v.id === paymentViolation.id ? { ...v, status: "paid" } : v))
       );
-      if (selectedViolation?.id === recordId) {
+      if (selectedViolation?.id === paymentViolation.id) {
         setSelectedViolation(prev => prev ? { ...prev, status: "paid" } : null);
       }
+      setPaymentViolation(null);
     } catch (e: any) {
-      toast.error("Failed to process payment status: " + e.message);
+      toast.error("Failed to save payment: " + e.message);
     } finally {
       setUpdatingPaymentId(null);
     }
@@ -958,7 +1000,7 @@ export default function App() {
                             </button>
                             {record.status === "pending" && (
                               <button
-                                onClick={() => handleMarkAsPaid(record.id)}
+                                onClick={() => openPaymentModal(record)}
                                 disabled={updatingPaymentId === record.id}
                                 className="btn py-1.5 px-3 text-xs bg-emerald-600 text-white hover:bg-emerald-500 transition-colors"
                               >
@@ -1111,6 +1153,71 @@ export default function App() {
         </div>
       )}
 
+      {paymentViolation && (
+        <div className="modal-overlay" onClick={() => setPaymentViolation(null)}>
+          <form className="modal-content w-full max-w-lg space-y-6" onClick={e => e.stopPropagation()} onSubmit={handleMarkAsPaid}>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-xl font-bold text-foreground">Record Payment</h3>
+                <p className="text-sm text-muted-foreground mt-1">Enter the official receipt details for this violation.</p>
+              </div>
+              <button type="button" onClick={() => setPaymentViolation(null)} className="p-1.5 hover:bg-muted rounded-lg text-muted-foreground" aria-label="Close payment form">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="modal-section space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="block text-xs uppercase font-semibold text-muted-foreground">Reference Number</span>
+                  <span className="block mt-1 font-mono">{paymentViolation.referenceNumber}</span>
+                </div>
+                <div>
+                  <span className="block text-xs uppercase font-semibold text-muted-foreground">Amount Due</span>
+                  <span className="block mt-1 text-lg font-bold text-emerald-500">₱{Number(paymentViolation.totalAmount || 0).toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <label className="block sm:col-span-2">
+                <span className="block text-sm font-semibold mb-1">OR Number *</span>
+                <input required value={paymentForm.orNumber} onChange={e => setPaymentForm(prev => ({ ...prev, orNumber: e.target.value }))} className="input-field" placeholder="Enter official receipt number" />
+              </label>
+              <label className="block">
+                <span className="block text-sm font-semibold mb-1">Payment Date *</span>
+                <input required type="date" value={paymentForm.paymentDate} onChange={e => setPaymentForm(prev => ({ ...prev, paymentDate: e.target.value }))} className="input-field" />
+              </label>
+              <label className="block">
+                <span className="block text-sm font-semibold mb-1">Payment Method *</span>
+                <select required value={paymentForm.paymentMethod} onChange={e => setPaymentForm(prev => ({ ...prev, paymentMethod: e.target.value }))} className="input-field">
+                  <option>Cash</option>
+                  <option>G-Cash</option>
+                  <option>Bank Transfer</option>
+                  <option>Other</option>
+                </select>
+              </label>
+              <label className="block sm:col-span-2">
+                <span className="block text-sm font-semibold mb-1">Received By</span>
+                <input value={paymentForm.receivedBy} onChange={e => setPaymentForm(prev => ({ ...prev, receivedBy: e.target.value }))} className="input-field" placeholder="Name of receiving staff" />
+              </label>
+              <label className="block sm:col-span-2">
+                <span className="block text-sm font-semibold mb-1">Remarks</span>
+                <textarea value={paymentForm.remarks} onChange={e => setPaymentForm(prev => ({ ...prev, remarks: e.target.value }))} className="input-field min-h-24 resize-y" placeholder="Optional payment notes" />
+              </label>
+            </div>
+
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
+              <button type="button" onClick={() => setPaymentViolation(null)} className="btn btn-secondary">Cancel</button>
+              <button type="submit" disabled={updatingPaymentId === paymentViolation.id} className="btn bg-emerald-600 text-white hover:bg-emerald-500">
+                {updatingPaymentId === paymentViolation.id && <Loader2 className="w-4 h-4 animate-spin" />}
+                Save Payment & Mark Paid
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
       {/* VIOLATION DETAILS MODAL */}
       {selectedViolation && (
         <div className="modal-overlay" onClick={() => setSelectedViolation(null)}>
@@ -1256,7 +1363,7 @@ export default function App() {
                 </button>
                 {selectedViolation.status === "pending" && (
                   <button
-                    onClick={() => handleMarkAsPaid(selectedViolation.id)}
+                    onClick={() => openPaymentModal(selectedViolation)}
                     disabled={updatingPaymentId === selectedViolation.id}
                     className="btn bg-emerald-600 text-white hover:bg-emerald-500 transition-colors"
                   >
