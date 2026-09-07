@@ -126,6 +126,7 @@ export default function App() {
   const [violations, setViolations] = useState<ViolationRecord[]>([]);
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [paymentsLoading, setPaymentsLoading] = useState(false);
+  const [paymentSearchQuery, setPaymentSearchQuery] = useState("");
   const [violationsLoading, setViolationsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "paid">("all");
@@ -730,6 +731,17 @@ export default function App() {
   );
 
   const canMarkPayments = currentUserRole === "treasurer";
+  const filteredPayments = payments.filter(payment => {
+    const query = paymentSearchQuery.toLowerCase().trim();
+    if (!query) return true;
+    return [
+      payment.violator_name,
+      payment.or_number,
+      payment.payment_method,
+      payment.received_by,
+      violations.find(record => record.id === payment.violation_id)?.referenceNumber,
+    ].some(value => value?.toLowerCase().includes(query));
+  });
 
   if (!isLoggedIn) {
     return (
@@ -961,6 +973,14 @@ export default function App() {
         {activeTab === "payments" && currentUserRole === "treasurer" && (
           <div className="screen-only card overflow-hidden">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+              <input
+                type="search"
+                className="input-field sm:max-w-md"
+                placeholder="Search violator, OR number, reference..."
+                value={paymentSearchQuery}
+                onChange={e => setPaymentSearchQuery(e.target.value)}
+                aria-label="Search payment transactions"
+              />
               <button type="button" onClick={fetchPayments} className="btn btn-secondary">Refresh Logs</button>
             </div>
             <div className="overflow-x-auto">
@@ -980,10 +1000,10 @@ export default function App() {
                 <tbody>
                   {paymentsLoading ? (
                     <tr><td colSpan={8} className="p-8 text-center text-muted-foreground"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></td></tr>
-                  ) : payments.length === 0 ? (
+                  ) : filteredPayments.length === 0 ? (
                     <tr><td colSpan={8} className="p-8 text-center text-muted-foreground">No payment transactions recorded</td></tr>
                   ) : (
-                    payments.map(payment => {
+                    filteredPayments.map(payment => {
                       const violation = violations.find(record => record.id === payment.violation_id);
                       return (
                         <tr key={payment.id}>
