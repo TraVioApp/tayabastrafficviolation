@@ -963,7 +963,7 @@ export default function App() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
               <button type="button" onClick={fetchPayments} className="btn btn-secondary">Refresh Logs</button>
             </div>
-            <div className="overflow-x-auto border border-border rounded-lg">
+            <div className="overflow-x-auto">
               <table className="data-table min-w-[900px]">
                 <thead>
                   <tr>
