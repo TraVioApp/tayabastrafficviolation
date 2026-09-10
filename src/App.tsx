@@ -261,6 +261,7 @@ export default function App() {
           return;
         }
         // success admin login
+        setActiveTab("dashboard");
         setIsLoggedIn(true);
         const displayName = (enforcer && (enforcer.name || enforcer.id || username)) || "System Admin";
         setAdminDisplayName(displayName);
@@ -709,6 +710,13 @@ export default function App() {
   // Calculated stats
   const totalPaid = violations.filter(v => v.status === "paid").length;
   const totalNotPaid = violations.filter(v => v.status === "pending").length;
+  const totalAssessedAmount = violations.reduce((total, violation) => total + Number(violation.totalAmount || 0), 0);
+  const totalPaidAmount = violations
+    .filter(violation => violation.status === "paid")
+    .reduce((total, violation) => total + Number(violation.totalAmount || 0), 0);
+  const totalOutstandingAmount = violations
+    .filter(violation => violation.status === "pending")
+    .reduce((total, violation) => total + Number(violation.totalAmount || 0), 0);
 
   // Filtered lists
   const filteredViolations = violations.filter(v => {
@@ -933,13 +941,15 @@ export default function App() {
 
             <div className="stat-card">
               <div>
-                <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">Total Not Paid</p>
+                <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">
+                  {currentUserRole === "treasurer" ? "Total Assessed Fines" : "Total Not Paid"}
+                </p>
                 <h3 className="text-3xl font-bold mt-1 text-amber-500">
-                  {totalNotPaid.toLocaleString()}
+                  {currentUserRole === "treasurer" ? `₱${totalAssessedAmount.toLocaleString()}` : totalNotPaid.toLocaleString()}
                 </h3>
               </div>
               <div className="icon-container bg-amber-500/10 text-amber-500">
-                <AlertCircle className="w-6 h-6" />
+                {currentUserRole === "treasurer" ? <DollarSign className="w-6 h-6" /> : <AlertCircle className="w-6 h-6" />}
               </div>
             </div>
 
@@ -947,13 +957,27 @@ export default function App() {
               <div>
                 <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">Total Paid</p>
                 <h3 className="text-3xl font-bold mt-1 text-emerald-500">
-                  {totalPaid.toLocaleString()}
+                  {currentUserRole === "treasurer" ? `₱${totalPaidAmount.toLocaleString()}` : totalPaid.toLocaleString()}
                 </h3>
               </div>
               <div className="icon-container bg-emerald-500/10 text-emerald-500">
                 <DollarSign className="w-6 h-6" />
               </div>
             </div>
+
+            {currentUserRole === "treasurer" && (
+              <div className="stat-card">
+                <div>
+                  <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">Outstanding Balance</p>
+                  <h3 className="text-3xl font-bold mt-1 text-red-400">
+                    ₱{totalOutstandingAmount.toLocaleString()}
+                  </h3>
+                </div>
+                <div className="icon-container bg-red-500/10 text-red-400">
+                  <AlertCircle className="w-6 h-6" />
+                </div>
+              </div>
+            )}
 
             <div className="stat-card">
               <div>
