@@ -74,6 +74,17 @@ interface Enforcer {
   role?: "admin" | "treasurer" | "officer";
 }
 
+const toEnforcerDbPayload = (enforcer: Pick<Enforcer, "name" | "username" | "password" | "badgeNumber" | "station" | "rank" | "role" | "dateJoined">) => ({
+  name: enforcer.name,
+  username: enforcer.username,
+  password: enforcer.password,
+  badge_number: enforcer.badgeNumber,
+  station: enforcer.station,
+  rank: enforcer.rank,
+  role: enforcer.role,
+  date_joined: enforcer.dateJoined,
+});
+
 interface PaymentRecord {
   id: string;
   violation_id: string;
@@ -513,15 +524,7 @@ export default function App() {
           if (!updatedOfficerRecord.id?.startsWith?.("OFF-")) {
             const { error } = await supabase
               .from("enforcers")
-              .update({
-                name: updatedOfficerRecord.name,
-                username: updatedOfficerRecord.username,
-                password: updatedOfficerRecord.password,
-                badgeNumber: updatedOfficerRecord.badgeNumber,
-                station: updatedOfficerRecord.station,
-                rank: updatedOfficerRecord.rank,
-                dateJoined: updatedOfficerRecord.dateJoined,
-              })
+              .update(toEnforcerDbPayload(updatedOfficerRecord))
               .eq("id", updatedOfficerRecord.id);
 
             if (error) {
@@ -534,12 +537,9 @@ export default function App() {
           } else {
             // The record is local-only (temporary id). Try to insert it as a new DB row.
             try {
-              const toInsert = { ...updatedOfficerRecord };
-              // Remove temporary id before insert
-              if (toInsert.id) delete (toInsert as any).id;
               const { data: inserted, error: insertErr } = await supabase
                 .from("enforcers")
-                .insert([toInsert])
+                .insert([toEnforcerDbPayload(updatedOfficerRecord)])
                 .select();
 
               if (insertErr) {
@@ -577,7 +577,7 @@ export default function App() {
         }
       } else {
         // Add flow
-        const payload = { ...newOfficer };
+        const payload = toEnforcerDbPayload(newOfficer);
         // Ensure password is set (required by DB schema)
         if (!payload.password) {
           payload.password = "password123"; // default password for new officers
