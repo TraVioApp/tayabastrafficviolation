@@ -730,6 +730,7 @@ export default function App() {
     e.station?.toLowerCase().includes(officerSearchQuery.toLowerCase())
   );
 
+  const canManageOfficers = currentUserRole === "admin";
   const canMarkPayments = currentUserRole === "treasurer";
   const filteredPayments = payments.filter(payment => {
     const query = paymentSearchQuery.toLowerCase().trim();
@@ -797,17 +798,19 @@ export default function App() {
             <span className="nav-text">Violation Reports</span>
           </button>
 
-          <button
-            onClick={() => setActiveTab("officers")}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-              activeTab === "officers"
-                ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-            }`}
-          >
-            <Users className="w-5 h-5" />
-            <span className="nav-text">Officers Directory</span>
-          </button>
+          {canManageOfficers && (
+            <button
+              onClick={() => setActiveTab("officers")}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                activeTab === "officers"
+                  ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              }`}
+            >
+              <Users className="w-5 h-5" />
+              <span className="nav-text">Officers Directory</span>
+            </button>
+          )}
 
           <button
             onClick={() => setActiveTab("reports")}
@@ -899,7 +902,7 @@ export default function App() {
               <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); fetchViolations(); }} className="btn btn-secondary text-sm">
                 Refresh Records
               </button>
-            ) : activeTab === "officers" ? (
+            ) : activeTab === "officers" && canManageOfficers ? (
               <button onClick={() => setShowAddOfficerModal(true)} className="btn btn-primary">
                 <Plus className="w-4 h-4" /> Add Officer
               </button>
@@ -1154,7 +1157,7 @@ export default function App() {
         )}
 
         {/* OFFICERS TAB */}
-        {activeTab === "officers" && (
+        {activeTab === "officers" && canManageOfficers && (
           <div className="screen-only card mt-5">
             <div className="pt-5 pb-0">
               <input
@@ -1513,7 +1516,7 @@ export default function App() {
       )}
 
       {/* ADD / EDIT OFFICER MODAL */}
-      {showAddOfficerModal && (
+      {showAddOfficerModal && canManageOfficers && (
         <div className="modal-overlay" onClick={() => {
           setShowAddOfficerModal(false);
           setEditingOfficer(null);
