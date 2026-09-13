@@ -3,6 +3,7 @@ import { supabase } from "./supabase";
 import {
   Plus,
   Check,
+  CheckCircle,
   X,
   User,
   Car,
@@ -961,7 +962,7 @@ export default function App() {
                 </h3>
               </div>
               <div className="icon-container bg-emerald-500/10 text-emerald-500">
-                <span className="text-xl font-bold" aria-hidden="true">₱</span>
+                {currentUserRole === "treasurer" ? <span className="text-xl font-bold" aria-hidden="true">₱</span> : <CheckCircle className="w-6 h-6" />}
               </div>
             </div>
 
