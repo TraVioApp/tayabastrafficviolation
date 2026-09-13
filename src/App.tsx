@@ -961,7 +961,7 @@ export default function App() {
                 </h3>
               </div>
               <div className="icon-container bg-emerald-500/10 text-emerald-500">
-                <DollarSign className="w-6 h-6" />
+                <span className="text-xl font-bold" aria-hidden="true">₱</span>
               </div>
             </div>
 
