@@ -949,7 +949,7 @@ export default function App() {
                 </h3>
               </div>
               <div className="icon-container bg-amber-500/10 text-amber-500">
-                {currentUserRole === "treasurer" ? <DollarSign className="w-6 h-6" /> : <AlertCircle className="w-6 h-6" />}
+                {currentUserRole === "treasurer" ? <span className="text-xl font-bold" aria-hidden="true">₱</span> : <AlertCircle className="w-6 h-6" />}
               </div>
             </div>
 
