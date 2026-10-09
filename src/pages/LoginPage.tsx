@@ -1,4 +1,5 @@
-import { Lock, ShieldCheck, User } from "lucide-react";
+import { useState } from "react";
+import { Eye, EyeOff, Lock, ShieldCheck, User } from "lucide-react";
 import "./LoginPage.css";
 
 interface LoginPageProps {
@@ -16,6 +17,8 @@ export function LoginPage({
   setPassword,
   handleLogin,
 }: LoginPageProps) {
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
     <div className="login-page">
       <div className="login-shell">
@@ -91,13 +94,22 @@ export function LoginPage({
                     <Lock />
                     <input
                       id="password"
-                      type="password"
-                      className="login-input"
+                      type={showPassword ? "text" : "password"}
+                      className="login-input login-password-input"
                       placeholder="Enter your password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
                     />
+                    <button
+                      type="button"
+                      className="login-password-toggle"
+                      onClick={() => setShowPassword(visible => !visible)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      aria-pressed={showPassword}
+                    >
+                      {showPassword ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
+                    </button>
                   </div>
                 </div>
 

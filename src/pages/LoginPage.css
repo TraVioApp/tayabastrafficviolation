@@ -234,7 +234,7 @@
   position: relative;
 }
 
-.login-input-wrap svg {
+.login-input-wrap > svg {
   position: absolute;
   left: 14px;
   top: 50%;
@@ -254,6 +254,43 @@
   color: #0f172a;
   font-size: 0.96rem;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.login-password-input {
+  padding-right: 54px;
+}
+
+.login-password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.login-password-toggle:hover {
+  background: #e2e8f0;
+  color: #1e3a8a;
+}
+
+.login-password-toggle:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 1px;
+}
+
+.login-password-toggle svg {
+  width: 18px;
+  height: 18px;
 }
 
 .login-input:focus {
