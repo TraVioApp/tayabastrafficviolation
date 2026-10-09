@@ -142,6 +142,8 @@ export default function App() {
   const [violationsLoading, setViolationsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "paid">("all");
+  const [recordedFrom, setRecordedFrom] = useState("");
+  const [recordedTo, setRecordedTo] = useState("");
   const [selectedViolation, setSelectedViolation] = useState<ViolationRecord | null>(null);
   const [paymentViolation, setPaymentViolation] = useState<ViolationRecord | null>(null);
   const [paymentForm, setPaymentForm] = useState({
@@ -160,6 +162,7 @@ export default function App() {
   const [officerSearchQuery, setOfficerSearchQuery] = useState("");
   const [showAddOfficerModal, setShowAddOfficerModal] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [officerToDelete, setOfficerToDelete] = useState<Enforcer | null>(null);
   const [savingOfficer, setSavingOfficer] = useState(false);
   const [editingOfficer, setEditingOfficer] = useState<Enforcer | null>(null);
   
@@ -321,7 +324,8 @@ export default function App() {
         isSystemAdmin: off.is_system_admin,
         role: off.role || (off.is_system_admin ? "admin" : "officer"),
       }));
-      setEnforcers(normalized);
+      const locallyDeletedIds = JSON.parse(localStorage.getItem("tms_archived_enforcer_ids") || "[]") as string[];
+      setEnforcers(normalized.filter(officer => !locallyDeletedIds.includes(officer.id)));
     } catch (e: any) {
       console.error(e);
       toast.error("Failed to load officers: " + e.message);
@@ -490,7 +494,7 @@ export default function App() {
         </head>
         <body>
           <h1>Traffic Violation Report</h1>
-          <p>Status filter: ${statusFilter.toUpperCase()}${searchQuery ? " | Search filter applied" : ""}</p>
+          <p>Status filter: ${statusFilter.toUpperCase()}${searchQuery ? " | Search filter applied" : ""}${recordedFrom || recordedTo ? ` | Recorded date: ${recordedFrom || "any"} to ${recordedTo || "any"}` : ""}</p>
           ${table}
         </body>
       </html>
@@ -639,26 +643,59 @@ export default function App() {
   // Delete officer handler
   const handleDeleteOfficer = async (officerId: string) => {
     try {
-      // Add to deleted IDs in local storage
-      const localDeleted = JSON.parse(localStorage.getItem("tms_deleted_enforcer_ids") || "[]");
-      if (!localDeleted.includes(officerId)) {
-        localDeleted.push(officerId);
-        localStorage.setItem("tms_deleted_enforcer_ids", JSON.stringify(localDeleted));
-      }
-      
-      // Also remove from custom enforcers if it was there
       const localCustom = JSON.parse(localStorage.getItem("tms_custom_enforcers") || "[]");
-      const updatedCustom = localCustom.filter((e: Enforcer) => e.id !== officerId);
-      localStorage.setItem("tms_custom_enforcers", JSON.stringify(updatedCustom));
-      
-      // Try DB delete just in case
-      await supabase.from("enforcers").delete().eq("id", officerId);
-      
-      toast.success("Officer deleted from directory");
-      fetchEnforcers();
+      const isLocalOnly = localCustom.some((officer: Enforcer) => officer.id === officerId);
+
+      if (isLocalOnly) {
+        const updatedCustom = localCustom.filter((officer: Enforcer) => officer.id !== officerId);
+        localStorage.setItem("tms_custom_enforcers", JSON.stringify(updatedCustom));
+      } else {
+        const { error: deleteError } = await supabase
+          .from("enforcers")
+          .delete()
+          .eq("id", officerId);
+
+        if (deleteError?.code === "23503") {
+          const { data: archivedOfficer, error: archiveError } = await supabase
+            .from("enforcers")
+            .update({ status: "inactive" })
+            .eq("id", officerId)
+            .select("id")
+            .maybeSingle();
+
+          if (archiveError) throw archiveError;
+          if (!archivedOfficer) {
+            throw new Error("The officer has related records and could not be deactivated.");
+          }
+
+          const locallyDeletedIds = JSON.parse(localStorage.getItem("tms_archived_enforcer_ids") || "[]") as string[];
+          if (!locallyDeletedIds.includes(officerId)) {
+            locallyDeletedIds.push(officerId);
+            localStorage.setItem("tms_archived_enforcer_ids", JSON.stringify(locallyDeletedIds));
+          }
+          toast.success("Officer deactivated and removed from this directory. Violation history was preserved.");
+        } else {
+          if (deleteError) throw deleteError;
+
+          const { data: remainingOfficer, error: verifyError } = await supabase
+            .from("enforcers")
+            .select("id")
+            .eq("id", officerId)
+            .maybeSingle();
+
+          if (verifyError) throw verifyError;
+          if (remainingOfficer) {
+            throw new Error("The officer was not deleted. Check the database delete permissions.");
+          }
+          toast.success("Officer deleted from directory");
+        }
+      }
+
+      setEnforcers(current => current.filter(officer => officer.id !== officerId));
+      if (isLocalOnly) toast.success("Officer deleted from directory");
     } catch (e: any) {
       console.error(e);
-      toast.error("Error deleting officer");
+      toast.error("Failed to delete officer: " + (e.message || "Unknown error"));
     }
   };
 
@@ -721,6 +758,10 @@ export default function App() {
 
   // Filtered lists
   const filteredViolations = violations.filter(v => {
+    const createdAt = new Date(v.createdAt);
+    const recordedDate = Number.isNaN(createdAt.getTime())
+      ? ""
+      : `${createdAt.getFullYear()}-${String(createdAt.getMonth() + 1).padStart(2, "0")}-${String(createdAt.getDate()).padStart(2, "0")}`;
     const matchesSearch =
       v.driverName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       v.plateNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -729,8 +770,11 @@ export default function App() {
 
     const matchesStatus =
       statusFilter === "all" || v.status === statusFilter;
+    const matchesRecordedDate =
+      (!recordedFrom || (recordedDate && recordedDate >= recordedFrom)) &&
+      (!recordedTo || (recordedDate && recordedDate <= recordedTo));
 
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && matchesRecordedDate;
   });
 
   const filteredEnforcers = enforcers.filter(e =>
@@ -1068,6 +1112,31 @@ export default function App() {
                 />
               </div>
 
+              <div className="grid grid-cols-2 gap-3 md:w-[22rem]">
+                <label className="block">
+                  <span className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Recorded from</span>
+                  <input
+                    type="date"
+                    value={recordedFrom}
+                    max={recordedTo || undefined}
+                    onChange={e => setRecordedFrom(e.target.value)}
+                    className="input-field"
+                    aria-label="Filter records from timestamp date"
+                  />
+                </label>
+                <label className="block">
+                  <span className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Recorded to</span>
+                  <input
+                    type="date"
+                    value={recordedTo}
+                    min={recordedFrom || undefined}
+                    onChange={e => setRecordedTo(e.target.value)}
+                    className="input-field"
+                    aria-label="Filter records through timestamp date"
+                  />
+                </label>
+              </div>
+
               <div className="filter-group">
                 {(["all", "pending", "paid"] as const).map(filter => (
                   <button
@@ -1092,7 +1161,7 @@ export default function App() {
 
             <div className="print-report-header">
               <h1>Traffic Violation Report</h1>
-              <p>Status: {statusFilter.toUpperCase()} {searchQuery ? ` | Search: ${searchQuery}` : ""}</p>
+              <p>Status: {statusFilter.toUpperCase()} {searchQuery ? ` | Search: ${searchQuery}` : ""}{recordedFrom || recordedTo ? ` | Recorded: ${recordedFrom || "any"} to ${recordedTo || "any"}` : ""}</p>
             </div>
 
             {/* Table */}
@@ -1104,6 +1173,7 @@ export default function App() {
                     <th>Driver Name</th>
                     <th>Plate Number</th>
                     <th>Date & Time</th>
+                    <th>Recorded Timestamp</th>
                     <th className="text-right">Amount</th>
                     <th className="text-center">Status</th>
                     <th className="text-center print-hide">Actions</th>
@@ -1112,14 +1182,14 @@ export default function App() {
                 <tbody>
                   {violationsLoading ? (
                     <tr>
-                      <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                      <td colSpan={8} className="p-8 text-center text-muted-foreground">
                         <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-blue-500" />
                         Synchronizing real-time logs...
                       </td>
                     </tr>
                   ) : filteredViolations.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                      <td colSpan={8} className="p-8 text-center text-muted-foreground">
                         No violation records match your query
                       </td>
                     </tr>
@@ -1131,6 +1201,11 @@ export default function App() {
                         <td className="font-mono text-xs text-foreground">{record.plateNumber}</td>
                         <td className="text-muted-foreground text-sm">
                           {record.violationDate} at {record.violationTime}
+                        </td>
+                        <td className="text-muted-foreground text-sm">
+                          {record.createdAt && !Number.isNaN(new Date(record.createdAt).getTime())
+                            ? new Date(record.createdAt).toLocaleString()
+                            : "N/A"}
                         </td>
                         <td className="text-right font-bold text-foreground">
                           ₱{Number(record.totalAmount || 0).toLocaleString()}
@@ -1274,11 +1349,7 @@ export default function App() {
                                 </button>
                                 
                                 <button
-                                  onClick={() => {
-                                    if (confirm(`Are you sure you want to delete ${officer.name}?`)) {
-                                      handleDeleteOfficer(officer.id);
-                                    }
-                                  }}
+                                  onClick={() => setOfficerToDelete(officer)}
                                   className="btn btn-danger py-1.5 px-3 text-xs bg-red-600/10 text-red-500 hover:bg-red-600/20"
                                 >
                                   Delete
@@ -1307,6 +1378,38 @@ export default function App() {
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
               <button type="button" onClick={() => setShowLogoutConfirm(false)} className="btn btn-secondary">Cancel</button>
               <button type="button" onClick={handleLogout} className="btn btn-danger">Logout</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {officerToDelete && (
+        <div className="modal-overlay" onClick={() => setOfficerToDelete(null)}>
+          <div
+            className="modal-content w-full max-w-md space-y-5"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-officer-title"
+            onClick={e => e.stopPropagation()}
+          >
+            <div>
+              <h3 id="delete-officer-title" className="text-xl font-bold text-foreground">Delete Officer</h3>
+              <p className="text-sm text-muted-foreground mt-2">
+                Are you sure you want to delete <span className="font-semibold text-foreground">{officerToDelete.name}</span>? This action cannot be undone.
+              </p>
+            </div>
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+              <button type="button" onClick={() => setOfficerToDelete(null)} className="btn btn-secondary">Cancel</button>
+              <button
+                type="button"
+                onClick={() => {
+                  handleDeleteOfficer(officerToDelete.id);
+                  setOfficerToDelete(null);
+                }}
+                className="btn btn-danger"
+              >
+                Delete Officer
+              </button>
             </div>
           </div>
         </div>
